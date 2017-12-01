@@ -1,3 +1,10 @@
+# How to Use This Repo
+This repo contains the project files needed for Treehouse's [Build a Chatbot with Watson APIs](https://teamtreehouse.com/library/build-a-chatbot-with-watson-apis) course. Clone this repo on your computer to sync up with the instructors so you can follow along and build your own chatbot.
+
+The remaining instructions below are included here for additional reference, but you should follow along with the course to make this app work with Watson APIs.
+
+----
+
 # Conversation Sample Application
 [![Build Status](https://travis-ci.org/watson-developer-cloud/conversation-simple.svg?branch=master)](http://travis-ci.org/watson-developer-cloud/conversation-simple)
 [![codecov.io](https://codecov.io/github/watson-developer-cloud/conversation-simple/coverage.svg?branch=master)](https://codecov.io/github/watson-developer-cloud/conversation-simple?branch=master)
