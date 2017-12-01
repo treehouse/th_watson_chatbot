@@ -1,0 +1,13 @@
+applications:
+- path: .
+  memory: 256M
+  instances: 1
+  domain: mybluemix.net
+  name: your_app_name
+  host: same as above
+  disk_quota: 1024M
+  services:
+  - Conversation-xyz
+  env:
+    WORKSPACE_ID: place your WORKSPACE_ID here
+    WEATHER_KEY: place your WEATHER_KEY here
