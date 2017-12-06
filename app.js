@@ -22,7 +22,7 @@ require( 'dotenv' ).config( {silent: true} );
 var express = require( 'express' );  // app server
 var bodyParser = require( 'body-parser' );  // parser for post requests
 var watson = require( 'watson-developer-cloud' );  // watson sdk
-//var watsonDiscovery = require('watson-developer-cloud/discovery/v1'); // watson discovery sdk
+var watsonDiscovery = require('watson-developer-cloud/discovery/v1'); // watson discovery sdk
 
 // Bootstrap application settings
 var app = express();
@@ -40,6 +40,16 @@ var conversation = watson.conversation( {
   version_date: process.env.CONVERSATION_VERSION_DATE,
   version: 'v1'
 } );
+
+var discovery = new watsonDiscovery({
+  url: process.env.DISCOVERY_URL,
+  username: process.env.DISCOVERY_USERNAME || '<username>',
+  password: process.env.DISCOVERY_PASSWORD || '<password>',
+  version_date: process.env.DISCOVERY_VERSION_DATE,
+  version: 'v1'
+});
+
+var intentConfidence = process.env.INTENT_CONFIDENCE;
 
 // Context gets passed back and forth between this app and the service
 var previousContext = null;
@@ -81,6 +91,49 @@ app.post( '/api/message', function(req, res) {
   conversation.message( payload, function(err, data) {
     if ( err ) {
       return res.status( err.code || 500 ).json( err );
+    }
+    // Check the confidence level and forward text to the Discovery service, if needed
+    else if (data.input.text !== "start conversation" && data.intents.length > 0 && data.intents[0].confidence < intentConfidence) {
+      // Log the Conversation repsonse for us to explore
+      console.log("Logging the response from the Conversation service:");
+      console.log(data);
+
+      // return discovery data
+      var response = {
+        "input": {"text": req.body.input.text},
+        "context": data.context,
+        "output": {"text": []}
+      };
+
+      var version_date = process.env.DISCOVERY_VERSION_DATE;
+      var environment_id = process.env.DISCOVERY_ENVIRONMENT_ID;
+      var collection_id = process.env.DISCOVERY_COLLECTION_ID;
+
+      discovery.query({
+          version_date: version_date,
+          environment_id: environment_id,
+          collection_id: collection_id,
+          query: req.body.input.text,
+          count: 5
+        },
+        (err, data) => {
+          if (err) {
+            console.log("Error: ");
+            console.log(err);
+            return res.status(err.code || 500).json(err);
+          }
+
+          if (data.results.length > 0) {
+            for(var i = 0; i < data.results.length; i++) {
+              response.output.text.push(data.results[i]); // keep this use-case agnostic;
+            }
+          } else {
+            response.output.text.push("I cannot find an answer to your question.");
+          }
+
+          return res.json(response);
+        }
+      );
     }
     // Successful response from the Conversation service
     else {
